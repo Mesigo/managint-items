@@ -2,6 +2,7 @@ const express = require('express')
 const swaggerUi = require('swagger-ui-express')
 const YAML = require('yamljs')
 const mongoose = require('mongoose');
+const { validate } = require('./models/Item');
 require('dotenv').config(); // Load environment variables
 
 
@@ -29,11 +30,15 @@ const itemSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
+    trim: true,
+    minlength: 2,
   },
   email: {
     type: String,
     required: true,
-  },
+    unique: true,
+    match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+ },
 });
 
 const Item = mongoose.model('Item', itemSchema);
@@ -69,6 +74,10 @@ app.post('/items', async (req, res) =>{
 //get an item by id
 app.get('/items/:id', async (req, res) =>{
   try{
+    // Check if the ID is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid ID' });
+    }
     const item = await Item.findById((req.params.id))
   if (item) {
     res.json(item);
@@ -84,6 +93,10 @@ app.get('/items/:id', async (req, res) =>{
 //update an item by id
 app.put('/items/:id', async (req, res) =>{
   try{ 
+    // Check if the ID is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid ID' });
+    }
     const updatedItem = await Item.findByIdAndUpdate(
       req.params.id,
       {
@@ -105,6 +118,10 @@ app.put('/items/:id', async (req, res) =>{
 //delet an item by id
 app.delete('/items/:id', async (req, res)=>{
   try{
+    // Check if the ID is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid ID' });
+    }
     const deletedItem = Item.findByIdAndDelete(req.params.id)
   if(deletedItem){
     res.json({message: 'item deleted'})
